@@ -8,7 +8,7 @@ def rand(*shape, low=0.0, high=1.0, device=None, dtype="float32", requires_grad=
     device = ndl.cpu() if device is None else device
     array = device.rand(*shape) * (high - low) + low
     return ndl.Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
-    
+
 
 def randn(*shape, mean=0.0, std=1.0, device=None, dtype="float32", requires_grad=False):
     """ Generate random normal with specified mean and std deviation """
@@ -48,26 +48,23 @@ def one_hot(n, i, device=None, dtype="float32", requires_grad=False):
 
 
 def xavier_uniform(fan_in, fan_out, gain=1.0, **kwargs):
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    bound = gain * math.sqrt(6 / (fan_in + fan_out))
+    return rand(fan_in, fan_out, low=-bound, high=bound)
 
 
 def xavier_normal(fan_in, fan_out, gain=1.0, **kwargs):
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    std = math.sqrt(2 / (fan_in + fan_out))
+    return gain * randn(fan_in, fan_out, mean=0.0, std=std)
 
 
 def kaiming_uniform(fan_in, fan_out, nonlinearity="relu", **kwargs):
     assert nonlinearity == "relu", "Only relu supported currently"
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    gain = kwargs.pop("gain", math.sqrt(2.0))
+    bound = gain * math.sqrt(3 / fan_in)
+    return rand(fan_in, fan_out, low=-bound, high=bound)
 
 
 def kaiming_normal(fan_in, fan_out, nonlinearity="relu", **kwargs):
     assert nonlinearity == "relu", "Only relu supported currently"
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    std = math.sqrt(2 / fan_in)
+    return randn(fan_in, fan_out, mean=0.0, std=std)

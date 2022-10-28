@@ -1,0 +1,4 @@
+*pyc
+*.so
+*so.dSYM
+__pycache__

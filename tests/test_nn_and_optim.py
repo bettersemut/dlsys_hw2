@@ -39,6 +39,8 @@ def batchnorm_backward(*shape, affine=False):
     if affine:
         bn.weight.data = get_tensor(shape[1], entropy=42)
         bn.bias.data = get_tensor(shape[1], entropy=1337)
+    print("shape: ", shape)
+    print("x", x.shape, x)
     y = (bn(x)**2).sum().backward()
     return x.grad.cached_data
 
@@ -97,6 +99,9 @@ def layernorm_forward(shape, dim):
 def layernorm_backward(shape, dims):
     f = ndl.nn.LayerNorm1d(dims)
     x = get_tensor(*shape)
+    # print("shape: ", shape)
+    # print("dims: ", dims)
+    # print("x: ", x)
     (f(x)**4).sum().backward()
     return x.grad.cached_data
 
@@ -165,18 +170,27 @@ def learn_model_1d(feature_size, nclasses, _model, optimizer, epochs=1, **kwargs
 
     loss_func = nn.SoftmaxLoss()
     opt = optimizer(model.parameters(), **kwargs)
-
     for _ in range(epochs):
         for i, (X0, y0) in enumerate(zip(np.array_split(X, m//batch), np.array_split(y, m//batch))):
             opt.reset_grad()
             X0, y0 = ndl.Tensor(X0, dtype="float32"), ndl.Tensor(y0)
             out = model(X0)
+            # print("out dtype", out.dtype)
             loss = loss_func(out, y0)
+            # print("y0 dtype", y0.dtype)
+            # print("loss dtype", loss.dtype)
             loss.backward()
             # Opt should not change gradients.
             grad_before = model.parameters()[0].grad.detach().cached_data
+            param_before = model.parameters()[0].numpy()
+            # print("id_before", id(model.parameters()[0]))
             opt.step()
             grad_after = model.parameters()[0].grad.detach().cached_data
+            param_after = model.parameters()[0].numpy()
+            # print("id_after", id(model.parameters()[0]))
+            # print("param_before", param_before)
+            # print("param_after", param_after)
+            # print("i\t", i, "\tL1-distance:\t", np.abs(param_after - param_before).max())
             np.testing.assert_allclose(grad_before, grad_after, rtol=1e-5, atol=1e-5, \
                                        err_msg="Optim should not modify gradients in place")
 
@@ -282,7 +296,7 @@ def power_scalar_backward(shape, power=2):
 
 def logsumexp_forward(shape, axes):
     x = get_tensor(*shape)
-    return (ndl.ops.logsumexp(x,axes=axes)).cached_data
+    return (ndl.ops.logsumexp(x, axes=axes)).cached_data
 
 def logsumexp_backward(shape, axes):
     x = get_tensor(*shape)

@@ -1,6 +1,6 @@
 """Core data structures."""
 import needle
-from typing import List, Optional, NamedTuple, Tuple, Union
+from typing import List, Optional, NamedTuple, Tuple, Union, Dict
 from collections import namedtuple
 import numpy
 from needle import init
@@ -364,9 +364,10 @@ class Tensor(Value):
             return needle.ops.MulScalar(other)(self)
 
     def __pow__(self, other):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        if isinstance(other, Tensor):
+            raise NotImplementedError()
+        else:
+            return needle.ops.PowerScalar(other)(self)
 
     def __sub__(self, other):
         if isinstance(other, Tensor):
@@ -407,6 +408,15 @@ class Tensor(Value):
     __rmatmul__ = __matmul__
 
 
+
+def as_tuple(output):
+    if isinstance(output, tuple):
+        return output
+    elif isinstance(output, list):
+        return tuple(output)
+    else:
+        return (output,)
+
 def compute_gradient_of_variables(output_tensor, out_grad):
     """Take gradient of output node with respect to each node in node_list.
 
@@ -422,9 +432,14 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     # Traverse graph in reverse topological order given the output_node that we are taking gradient wrt.
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    for node_i in reverse_topo_order:
+        node_i.grad = sum_node_list(node_to_output_grads_list[node_i])
+        if node_i.op is None:
+            continue
+        for node_j, grad_j in zip(node_i.inputs, as_tuple(node_i.op.gradient(node_i.grad, node_i))):
+            if node_j not in node_to_output_grads_list:
+                node_to_output_grads_list[node_j] = []
+            node_to_output_grads_list[node_j].append(grad_j)
 
 
 def find_topo_sort(node_list: List[Value]) -> List[Value]:
@@ -435,16 +450,27 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     after all its predecessors are traversed due to post-order DFS, we get a topological
     sort.
     """
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    visited = set()
+    topo_order = []
+    if len(node_list) > 1:
+        dummy = sum(node_list)
+        topo_sort_dfs(dummy, visited, topo_order)
+        return topo_order[:-1]
+    elif len(node_list) == 1:
+        topo_sort_dfs(node_list[0], visited, topo_order)
+        return topo_order
+    else:
+        return []
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
-    ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
-    ### END YOUR SOLUTION
+    for child in node.inputs:
+        if child not in visited:
+            topo_sort_dfs(child, visited, topo_order)
+    topo_order.append(node)
+    visited.add(node)
+
 
 
 ##############################

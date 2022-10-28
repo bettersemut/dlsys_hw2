@@ -362,7 +362,7 @@ def submit_dataloader():
                                shuffle=True)
     subl_x = []
     subl_y = []
-    for i, batch in enumerate(mnist_test_dataloader):
+    for i, batch in enumerate(shuf):
         batch_x, batch_y = batch[0].numpy(), batch[1].numpy()
         subl_x.append(batch_x[10:15,10:15])
         subl_y.append(batch_y)
